@@ -1,21 +1,37 @@
 import pandas as pd
 from datetime import datetime as dt
 import logging
-import matplotlib as plt
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from galatynStationApts import getApartmentListingData
 
 forceCheckPrices = False
 
 def displayApartmentLineGraph(Price, Apartment):
-    plt.plot(x, y1, label='Line 1')
-    plt.plot(x, y2, label='Line 2')
-    plt.plot(x, y3, label='Line 3')
+    Price["date"] = pd.to_datetime(Price["date"])
+
+    plt.figure(figsize=(12, 6))
+
+    # Plot each apartment individually
+    for apt in Apartment["apt"].unique():
+        apt_prices = Price[Price["apt"] == apt].sort_values("date")
+        plt.plot(apt_prices["date"], apt_prices["price"], label=f"Apt {apt}", color="blue" if Apartment[Apartment["apt"] == apt]["beds"].values[0] == 1 else "red")
+
+
 
     # Add labels and legend
-    plt.xlabel("X-axis")
-    plt.ylabel("Y-axis")
-    plt.title("Multiple Line Graph")
-    plt.legend()
+    plt.xlabel("Time")
+    plt.ylabel("Price ($)")
+    plt.title("Prices of Apartments at Galatyn Station")
+
+    legend_elements = [
+        Line2D([0], [0], color='blue', lw=2, label='1 Bed'),
+        Line2D([0], [0], color='red', lw=2, label='2+ Beds')
+    ]
+
+    # Add the custom legend
+    plt.legend(handles=legend_elements, title="Bedroom Count")
+    plt.xticks(rotation=45)
 
     # Show plot
     plt.show()
@@ -58,7 +74,7 @@ def main():
         print(f"Data already gathered for this interval. Will collect again at {lastScanTime+getDataInterval+pd.Timedelta(minutes=1)}")
 
 
-    # displayApartmentLineGraph()
+    displayApartmentLineGraph(Price, Apartment)
 
 
 if __name__ == "__main__":

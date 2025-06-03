@@ -28,20 +28,23 @@ def getApartmentListingData(Price, Apartment):
     driver.get("https://galatynstationrichardson.com/floorplans/")
 
     acceptCookiesButton = WebDriverWait(driver, 500).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, ".cookie-banner__button.cookie-banner__button--accept"))
+        EC.element_to_be_clickable((By.CSS_SELECTOR, ".cookie-banner__button.cookie-banner__button--accept"))
     )
-    acceptCookiesButton.click()
+    driver.execute_script("arguments[0].click();", acceptCookiesButton)
+
 
     prices = []
     apts = []
 
     for i in range(5):
-        # Click the floor button
         floorButton = WebDriverWait(driver, 500).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, f'.swiper-wrapper'))
         )
-        floorButton = driver.find_element(By.CSS_SELECTOR, f'[aria-label|="Floor {i}"]')
-        floorButton.click()
+
+        floorButton = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, f'[aria-label|="Floor {i}"]'))
+        )
+        driver.execute_script("arguments[0].click();", floorButton)
         try:
             apartmentCards = WebDriverWait(driver, 5).until(
                 EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".jd-fp-card-info.jd-fp-card-info--y-adaptive.jd-fp-card-info--small-text"))
@@ -49,14 +52,10 @@ def getApartmentListingData(Price, Apartment):
         except TimeoutException as e:
             apartmentCards = []
             print(f"Timeout occurred when trying to find floor cards for floor {i}.")
-        print(f"Clicking on floor button {i}")
-        print("for apt card:")
-        print(apartmentCards)
+        
         for aptCard in apartmentCards:
             priceData = {}
             text = aptCard.text
-            print("going through the apt cards now")
-            print(text)
 
             priceData["date"] = dt.now().replace(second=0, microsecond=0)
             priceData["apt"] = int(re.search(r"#(\d+)", text)[1])
