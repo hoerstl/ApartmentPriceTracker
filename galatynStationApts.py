@@ -7,22 +7,37 @@ from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime as dt
 import re
 import pandas as pd
+from selenium.webdriver.chrome.options import Options
+
+
 
 
 
 
 
 def getApartmentListingData(Price, Apartment):
-    driver = webdriver.Chrome() # Put the path to your headless shell here
+    options = Options()
+    options.add_argument('--headless=new')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--window-size=1920,1080')
+    options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36')
+
+    driver = webdriver.Chrome(options=options) # Put the path to your headless shell in PATH
     
     driver.get("https://galatynstationrichardson.com/floorplans/")
+
+    acceptCookiesButton = WebDriverWait(driver, 500).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".cookie-banner__button.cookie-banner__button--accept"))
+    )
+    acceptCookiesButton.click()
 
     prices = []
     apts = []
 
     for i in range(5):
         # Click the floor button
-        floorButton = WebDriverWait(driver, 100).until(
+        floorButton = WebDriverWait(driver, 500).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, f'.swiper-wrapper'))
         )
         floorButton = driver.find_element(By.CSS_SELECTOR, f'[aria-label|="Floor {i}"]')
@@ -35,10 +50,13 @@ def getApartmentListingData(Price, Apartment):
             apartmentCards = []
             print(f"Timeout occurred when trying to find floor cards for floor {i}.")
         print(f"Clicking on floor button {i}")
-
+        print("for apt card:")
+        print(apartmentCards)
         for aptCard in apartmentCards:
             priceData = {}
             text = aptCard.text
+            print("going through the apt cards now")
+            print(text)
 
             priceData["date"] = dt.now().replace(second=0, microsecond=0)
             priceData["apt"] = int(re.search(r"#(\d+)", text)[1])
